@@ -49,4 +49,7 @@ return [
 
     (new Extend\ApiController(ShowDiscussionController::class))
         ->addInclude('posts.moneyRewards.giver'),
+
+    (new Extend\Settings())
+        ->serializeToForum('moneyRewardsCreateMoneyByDefault', 'money-rewards.createMoneyByDefault'),
 ];

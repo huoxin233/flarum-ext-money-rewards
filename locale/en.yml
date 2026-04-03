@@ -5,6 +5,7 @@ clarkwinkelmann-money-rewards:
             min: Minimum value for custom amounts
             max: Maximum value for custom amounts
             decimals: Maximum number of decimals for custom amounts
+            createMoneyByDefault: Enable "Create money" by default
         permissions:
             seeMoneyRewardHistory: See history of other user's rewards
             rewardWithMoney: Reward other users with money

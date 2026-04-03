@@ -4,6 +4,12 @@ app.initializers.add('clarkwinkelmann-money-rewards', () => {
     app.extensionData
         .for('clarkwinkelmann-money-rewards')
         .registerSetting({
+            type: 'switch',
+            setting: 'money-rewards.createMoneyByDefault',
+            label: app.translator.trans('clarkwinkelmann-money-rewards.admin.settings.createMoneyByDefault'),
+            min: 0,
+        })
+        .registerSetting({
             type: 'text',
             setting: 'money-rewards.preselection',
             label: app.translator.trans('clarkwinkelmann-money-rewards.admin.settings.preselection'),

@@ -1,8 +1,8 @@
 import app from 'flarum/forum/app';
-import Modal, {IInternalModalAttrs} from 'flarum/common/components/Modal';
+import Modal, { IInternalModalAttrs } from 'flarum/common/components/Modal';
 import Button from 'flarum/common/components/Button';
 import Switch from 'flarum/common/components/Switch';
-import {ApiPayloadSingle} from 'flarum/common/Store';
+import { ApiPayloadSingle } from 'flarum/common/Store';
 import Post from 'flarum/common/models/Post';
 import FormattedMoney from './FormattedMoney';
 
@@ -16,10 +16,14 @@ export default class RewardModal extends Modal<RewardModalAttrs> {
     customAmountValue: string = ''
     createMoney: boolean = false
     comment: string = ''
+    loading: boolean = false
 
     oninit(vnode: any) {
         super.oninit(vnode);
 
+        this.createMoney =
+            app.forum.attribute('moneyRewardsCreateMoney') &&
+            app.forum.attribute('moneyRewardsCreateMoneyByDefault') == 1;
         if ((app.forum.attribute<string[]>('moneyRewardsPreselection') || []).length === 0) {
             this.customAmount = true;
         }
@@ -35,6 +39,7 @@ export default class RewardModal extends Modal<RewardModalAttrs> {
 
     content() {
         const preselection = app.forum.attribute<string[]>('moneyRewardsPreselection') || [];
+        const canCreateMoney = !!app.forum.attribute('moneyRewardsCreateMoney');
 
         return m('.Modal-body', [
             m('.Form-group', [
@@ -94,7 +99,7 @@ export default class RewardModal extends Modal<RewardModalAttrs> {
                     })
                 }),
             ]),
-            app.forum.attribute('moneyRewardsCreateMoney') ? m('.Form-group', [
+            canCreateMoney ? m('.Form-group', [
                 Switch.component({
                     state: this.createMoney,
                     onchange: (value: boolean) => {
@@ -122,32 +127,34 @@ export default class RewardModal extends Modal<RewardModalAttrs> {
     onsubmit(event: Event) {
         event.preventDefault();
 
-        this.loading = true;
+        if (!this.loading) {
+            this.loading = true;
 
-        app.request<ApiPayloadSingle>({
-            method: 'POST',
-            url: app.forum.attribute('apiUrl') + '/posts/' + this.attrs.post.id() + '/money-rewards',
-            errorHandler: this.onerror.bind(this),
-            body: {
-                data: {
-                    attributes: {
-                        amount: this.customAmount ? this.customAmountValue : app.forum.attribute<string[]>('moneyRewardsPreselection')[this.preselectAmount],
-                        createMoney: this.createMoney,
-                        comment: this.comment,
+            app.request<ApiPayloadSingle>({
+                method: 'POST',
+                url: app.forum.attribute('apiUrl') + '/posts/' + this.attrs.post.id() + '/money-rewards',
+                errorHandler: this.onerror.bind(this),
+                body: {
+                    data: {
+                        attributes: {
+                            amount: this.customAmount ? this.customAmountValue : app.forum.attribute<string[]>('moneyRewardsPreselection')[this.preselectAmount],
+                            createMoney: !!app.forum.attribute('moneyRewardsCreateMoney') && this.createMoney,
+                            comment: this.comment,
+                        },
                     },
                 },
-            },
-        })
-            .then(payload => {
-                app.store.pushPayload(payload);
-
-                this.hide();
-
-                app.alerts.show({type: 'success'}, app.translator.trans('clarkwinkelmann-money-rewards.forum.modal.success'));
             })
-            .catch(() => {
-                this.loading = false;
-                m.redraw();
-            });
+                .then(payload => {
+                    app.store.pushPayload(payload);
+
+                    this.hide();
+
+                    app.alerts.show({ type: 'success' }, app.translator.trans('clarkwinkelmann-money-rewards.forum.modal.success'));
+                })
+                .catch(() => {
+                    this.loading = false;
+                    m.redraw();
+                });
+        }
     }
 }
