@@ -26,6 +26,9 @@ clarkwinkelmann-money-rewards:
         profile:
             nav: Rewards
             title: Rewards
+        history:
+            sent: "Rewarded {receiverUsername} on <postLink>post #{postNumber}</postLink>"
+            received: "Received a reward from {giverUsername} on <postLink>post #{postNumber}</postLink>"
         post:
             action: Reward
             disallowedOwn: You cannot reward your own posts.

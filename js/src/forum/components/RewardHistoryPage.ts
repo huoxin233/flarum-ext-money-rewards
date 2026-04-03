@@ -32,6 +32,9 @@ export default class RewardHistoryPage extends UserPage {
             this.rewards = app.store.pushPayload<Reward[]>(payload);
             this.loading = false;
             m.redraw();
+        }).catch(() => {
+            this.loading = false;
+            m.redraw();
         });
     }
 

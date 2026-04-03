@@ -2,7 +2,7 @@
 
 namespace ClarkWinkelmann\MoneyRewards\Controllers;
 
-use AntoineFr\Money\Event\MoneyUpdated;
+use AntoineFr\Money\Service\BalanceManager;
 use ClarkWinkelmann\MoneyRewards\Reward;
 use Flarum\Api\Controller\AbstractCreateController;
 use Flarum\Api\Serializer\PostSerializer;
@@ -12,11 +12,9 @@ use Flarum\Locale\Translator;
 use Flarum\Post\PostRepository;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
-use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
 use Tobscure\JsonApi\Document;
 
 class CreateRewardController extends AbstractCreateController
@@ -33,18 +31,23 @@ class CreateRewardController extends AbstractCreateController
     ];
 
     protected $settings;
-    protected $events;
     protected $repository;
     protected $validation;
     protected $translator;
+    protected $balances;
 
-    public function __construct(SettingsRepositoryInterface $settings, Dispatcher $events, PostRepository $repository, Factory $validation, Translator $translator)
-    {
+    public function __construct(
+        SettingsRepositoryInterface $settings,
+        PostRepository $repository,
+        Factory $validation,
+        Translator $translator,
+        BalanceManager $balances
+    ) {
         $this->settings = $settings;
-        $this->events = $events;
         $this->repository = $repository;
         $this->validation = $validation;
         $this->translator = $translator;
+        $this->balances = $balances;
     }
 
     protected function data(ServerRequestInterface $request, Document $document)
@@ -68,62 +71,48 @@ class CreateRewardController extends AbstractCreateController
 
         $this->validateAmount($amount, $actor);
 
-        $actorMoneyUpdated = false;
-        $recipientMoneyUpdated = false;
-        $reward = null;
-
         $createMoney = (bool)Arr::get($attributes, 'createMoney');
+        $recipient = $post->user;
 
         if ($createMoney) {
             $actor->assertCan('money-rewards.createMoney');
-        } else {
-            if ($actor->money < $amount) {
-                throw new ValidationException([
-                    'amount' => $this->translator->trans('clarkwinkelmann-money-rewards.api.error.notEnoughFunds'),
-                ]);
+        } elseif ($actor->money < $amount) {
+            throw new ValidationException([
+                'amount' => $this->translator->trans('clarkwinkelmann-money-rewards.api.error.notEnoughFunds'),
+            ]);
+        }
+
+        $transferred = $this->balances->transferBalance(
+            $createMoney ? null : $actor,
+            $recipient,
+            $amount,
+            'MONEY_REWARDS',
+            'clarkwinkelmann-money-rewards.forum.history.sent',
+            'clarkwinkelmann-money-rewards.forum.history.received',
+            [
+                'postNumber' => (int) $post->number,
+                'postLinkHref' => '/d/'.$post->discussion_id.'/'.$post->number,
+                'giverUsername' => (string) $actor->username,
+                'receiverUsername' => (string) $recipient->username,
+            ],
+            $actor,
+            function (?User $lockedActor, User $lockedRecipient) use ($post, $actor, $amount, $createMoney, $comment): void {
+                $reward = new Reward();
+                $reward->post()->associate($post);
+                $reward->giver()->associate($lockedActor ?? $actor);
+                $reward->receiver()->associate($lockedRecipient);
+                $reward->amount = $amount;
+                $reward->new_money = $createMoney;
+                $reward->comment = $comment;
+                $reward->save();
             }
+        );
+
+        if (! $transferred) {
+            throw new ValidationException([
+                'amount' => $this->translator->trans('clarkwinkelmann-money-rewards.api.error.notEnoughFunds'),
+            ]);
         }
-
-        try {
-            if (!$createMoney) {
-                $actor->money -= $amount;
-                $actor->save();
-                $actorMoneyUpdated = true;
-            }
-
-            $recipient = $post->user;
-
-            $recipient->money += $amount;
-            $recipient->save();
-            $recipientMoneyUpdated = true;
-
-            $reward = new Reward();
-            $reward->post()->associate($post);
-            $reward->giver()->associate($actor);
-            $reward->receiver()->associate($recipient);
-            $reward->amount = $amount;
-            $reward->new_money = $createMoney;
-            $reward->comment = $comment;
-            $reward->save();
-        } catch (\Exception $exception) {
-            $log = resolve(LoggerInterface::class);
-
-            $log->error(
-                '[money-rewards] An error occurred while processing the reward. Some of the money might not have been attributed' . PHP_EOL .
-                ' | Amount: ' . $amount . PHP_EOL .
-                ' | Create money: ' . ($createMoney ? 'yes' : 'no') . PHP_EOL .
-                ' | Actor (#' . $actor->id . ') money updated: ' . ($actorMoneyUpdated ? 'yes' : 'no') . PHP_EOL .
-                ' | Recipient (' . ($recipient ? '#' . $recipient->id : 'N/A') . ') money updated: ' . ($recipientMoneyUpdated ? 'yes' : 'no') . PHP_EOL .
-                ' | History entry: ' . ($reward ? 'created, #' . $reward->id : 'not created'),
-            );
-
-            throw $exception;
-        }
-
-        if ($actorMoneyUpdated) {
-            $this->events->dispatch(new MoneyUpdated($actor));
-        }
-        $this->events->dispatch(new MoneyUpdated($recipient));
 
         return $post;
     }
