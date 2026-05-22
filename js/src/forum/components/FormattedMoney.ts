@@ -7,7 +7,7 @@ interface MoneyFormatAttrs extends ComponentAttrs {
 
 export default class FormattedMoney extends Component<MoneyFormatAttrs> {
     view() {
-        const moneyName = app.forum.attribute<string>('antoinefr-money.moneyname') || '[money]';
+        const moneyName = app.forum.attribute<string>('huoxin-money-with-history.moneyname') || app.forum.attribute<string>('antoinefr-money.moneyname') || '[money]';
 
         return m('span', moneyName.replace('[money]', this.attrs.money + ''));
     }

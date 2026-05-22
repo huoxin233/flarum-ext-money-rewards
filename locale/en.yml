@@ -26,7 +26,7 @@ clarkwinkelmann-money-rewards:
         profile:
             nav: Rewards
             title: Rewards
-        history:
+        money-history:
             sent: "Rewarded {receiverUsername} on <postLink>post #{postNumber}</postLink>"
             received: "Received a reward from {giverUsername} on <postLink>post #{postNumber}</postLink>"
         post:

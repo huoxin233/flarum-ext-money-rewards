@@ -1,0 +1,45 @@
+clarkwinkelmann-money-rewards:
+    admin:
+        settings:
+            preselection: 预选金额（逗号分隔，可选）
+            min: 自定义金额的最小值
+            max: 自定义金额的最大值
+            decimals: 自定义金额允许的小数位数
+            createMoneyByDefault: 默认启用“创建金额”
+        permissions:
+            seeMoneyRewardHistory: 查看其他用户的打赏历史
+            rewardWithMoney: 用余额打赏其他用户
+            customAmounts: 自定义打赏金额
+            createMoney: 打赏时创建新金额
+    forum:
+        modal:
+            title: 打赏
+            target: "打赏 #{number} 楼，作者是 {username}"
+            optionCustom: 自定义
+            balance: "你的余额：{amount}"
+            label:
+                custom: 自定义金额
+                create: 创建金额而不是扣减我的余额
+                comment: 留言（公开）
+            submit: 提交
+            success: 打赏已发送给帖子作者！
+        profile:
+            nav: 打赏记录
+            title: 打赏记录
+        money-history:
+            sent: "打赏了 {receiverUsername} 的帖子 {discussionId} #{postNumber}"
+            received: "收到了 {giverUsername} 对帖子 {discussionId} #{postNumber}"
+        post:
+            action: 打赏
+            disallowedOwn: 你不能打赏自己的帖子。
+            disallowedOther: 你不能打赏这个帖子，通常是因为作者匿名或账号已删除。
+            section: 本楼收到的打赏
+        record:
+            from: 来自
+            to: 给
+            post: "来自讨论“{title}”中的 <a>帖子 #{number}</a>"
+            comment: 留言：
+    api:
+        error:
+            decimals: 金额最多允许 {decimals} 位小数。
+            notEnoughFunds: 余额不足。

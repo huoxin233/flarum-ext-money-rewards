@@ -2,7 +2,7 @@
 
 namespace ClarkWinkelmann\MoneyRewards\Controllers;
 
-use AntoineFr\Money\Service\BalanceManager;
+use Huoxin\MoneyWithHistory\Service\BalanceManager;
 use ClarkWinkelmann\MoneyRewards\Reward;
 use Flarum\Api\Controller\AbstractCreateController;
 use Flarum\Api\Serializer\PostSerializer;
@@ -86,9 +86,9 @@ class CreateRewardController extends AbstractCreateController
             $createMoney ? null : $actor,
             $recipient,
             $amount,
-            'MONEY_REWARDS',
-            'clarkwinkelmann-money-rewards.forum.history.sent',
-            'clarkwinkelmann-money-rewards.forum.history.received',
+            'POST_TIP_REWARD',
+            'clarkwinkelmann-money-rewards.forum.money-history.sent',
+            'clarkwinkelmann-money-rewards.forum.money-history.received',
             [
                 'postNumber' => (int) $post->number,
                 'postLinkHref' => '/d/'.$post->discussion_id.'/'.$post->number,
