@@ -27,8 +27,8 @@ clarkwinkelmann-money-rewards:
             nav: 打赏记录
             title: 打赏记录
         money-history:
-            sent: "打赏了 {receiverUsername} 的帖子 {discussionId} #{postNumber}"
-            received: "收到了 {giverUsername} 对帖子 {discussionId} #{postNumber}"
+            sent: "打赏了 {receiverUsername} 的帖子 <postLink>#{postNumber}</postLink>"
+            received: "收到了 {giverUsername} 对帖子 <postLink>#{postNumber}</postLink>"
         post:
             action: 打赏
             disallowedOwn: 你不能打赏自己的帖子。
