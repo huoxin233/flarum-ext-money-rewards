@@ -8,11 +8,8 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": "^1.2"
-    },
-    "suggest": {
-        "antoinefr/flarum-ext-money": "Provides money balances for rewards",
-        "huoxin/money-with-history": "Provides money balances and transaction history for rewards"
+        "flarum/core": "^1.2",
+        "antoinefr/flarum-ext-money": "*"
     },
     "authors": [
         {
